@@ -59,8 +59,8 @@ export class RecordService {
     }
 
     public static async updateRecord(
-        id: string,
         userId: string,
+        id: string,
         update: {
             title?: string;
             audio_id?: string;

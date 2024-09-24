@@ -1,20 +1,13 @@
 'use client';
 
-import { Button } from '@/components/ui/button';
+import { FileText, Search, Plus, LogOut } from 'lucide-react';
+import Link from 'next/link';
+import { useEffect, useState } from 'react';
 import { Card } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { FileText, Search, Plus, MoreHorizontal, LogOut } from 'lucide-react';
-import Link from 'next/link';
-import { useEffect, useState } from 'react';
 import PageLoading from './loading';
-
-interface IAudioNote {
-	id: number;
-	title: string;
-	date: string;
-	transcription: string;
-}
+import { IAudioNote } from '@/types';
 
 export function NotesDashboard() {
 	const [audioNotes, setAudioNotes] = useState<IAudioNote[]>([]);
@@ -53,7 +46,7 @@ export function NotesDashboard() {
 	}
 	
 	return (
-		<div className="flex h-screen bg-gray-100">
+		<div className="flex h-screen bg-gray-100 overflow-hidden">
 			{/* Left Sidebar */}
 			<div className="w-16 bg-white p-4 flex flex-col items-center space-y-6">
 				<Link href="/dashboard/transcribe">
@@ -64,13 +57,13 @@ export function NotesDashboard() {
 						<FileText className="text-white" />
 					</Link>
 				</div>
-				<Link href="/api/auth/logout">
+				<Link href="/api/logout">
 					<LogOut className="text-gray-400" />
 				</Link>
 			</div>
 
 			{/* Main Content */}
-			<div className="flex-1 p-8">
+			<div className="flex-1 p-8 h-screen overflow-y-auto">
 				<div className="max-w-4xl mx-auto">
 					<div className="mb-8 relative">
 						<Input 
@@ -100,7 +93,7 @@ export function NotesDashboard() {
 										</p>
 									</div>
 								</div>
-								<Tabs defaultValue="summary">
+								<Tabs>
 									<TabsList>
 										<TabsTrigger value="transcript">Show Transcript</TabsTrigger>
 									</TabsList>

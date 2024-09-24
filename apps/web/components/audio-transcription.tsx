@@ -24,6 +24,7 @@ export function AudioTranscription() {
 
 	useEffect(() => {
 		if (isReadyToTranscribe && finalAudioBlob) {
+			setIsLoading(true);
 			const formData = new FormData();
 			formData.append('file', finalAudioBlob);
 			// eslint-disable-next-line turbo/no-undeclared-env-vars
@@ -40,18 +41,15 @@ export function AudioTranscription() {
 				})
 				.catch(err => {
 					console.error('Error:', err);
+				}).finally(() => {
+					setIsLoading(false);
 				});
 		}
 	}, [isReadyToTranscribe, mode]);
 
-	useEffect(() => {
-		console.log('showProjectNameInput:', showProjectNameInput);
-		console.log('audioId:', audioId);
-	}, [showProjectNameInput]);
-
 	const handleProjectNameSubmit = () => {
 		setShowProjectNameInput(false);
-		
+		setIsLoading(true);
 		// eslint-disable-next-line turbo/no-undeclared-env-vars
 		fetch(`${process.env.NEXT_PUBLIC_API_URL}/record`, {
 			method: 'POST',
@@ -69,7 +67,17 @@ export function AudioTranscription() {
 				setIsLoading(false);
 				router.push(`/dashboard/audio/${data._id}`);
 			})
+			.catch(err => {
+				console.error('Error:', err);
+			})
+			.finally(() => {
+				setIsLoading(false);
+			});
 	};
+
+	if (isLoading) {
+		return <PageLoading />;
+	}
 
 	return (
 		<>
@@ -84,7 +92,7 @@ export function AudioTranscription() {
 					<Link href="/dashboard">
 						<FileText className="text-gray-400" />
 					</Link>
-					<Link href="/api/auth/logout">
+					<Link href="/api/logout">
 						<LogOut className="text-gray-400" />
 					</Link>
 				</div>
@@ -137,7 +145,14 @@ export function AudioTranscription() {
 					</Card>
 				</div>
 			</div>
-			<Dialog open={showProjectNameInput} onOpenChange={setShowProjectNameInput}>
+			<Dialog open={showProjectNameInput} onOpenChange={(val) => {
+				if(val){
+					setShowProjectNameInput(true)
+				}
+				setIsReadyToTranscribe(false)
+				setFinalAudioBlob(null)
+				setShowProjectNameInput(false)
+			}}>
 				<DialogContent className="bg-white p-8 rounded-lg shadow-lg">
 					<DialogHeader className="text-2xl font-bold mb-4">
 						<DialogTitle>Create a New Project</DialogTitle>

@@ -11,22 +11,15 @@ import { DeleteProject, ShareProject } from './delete-share-project';
 import PageLoading from './loading';
 import Markdown from 'react-markdown';
 import remarkGfm from 'remark-gfm'
-
-interface IAudioNote {
-	id: string;
-	title: string;
-	date: string;
-	summary: string;
-	transcription: string;
-	audioUrl: string;
-}
+import { type ISAudioNote } from '@/types';
 
 export function AudioNoteDetail({
 	audioId
 } : Readonly<{
 	audioId: string,
 }>) {
-	const [audioNote, setAudioNote] = useState<IAudioNote | null>(null);
+	const [audioNote, setAudioNote] = useState<ISAudioNote | null>(null);
+	const [audioSummary, setAudioSummary] = useState<string>('');
 	const [isPlaying, setIsPlaying] = useState(false);
 	const [playAudio, setPlayAudio] = useState(false);
 	const [audio, setAudio] = useState<HTMLAudioElement | null>(null);
@@ -43,7 +36,7 @@ export function AudioNoteDetail({
 		})
 			.then((response) => response.json())
 			.then((data) => {
-				const audioNote: IAudioNote = {
+				const audioNote: ISAudioNote = {
 					id: data.record.id,
 					title: data.record.title,
 					date: data.record.created_at,
@@ -51,6 +44,7 @@ export function AudioNoteDetail({
 					transcription: data.record.transcription,
 					audioUrl: data.audio.url,
 				};
+				setAudioSummary(data.record.summary);
 				setAudioNote(audioNote);
 				setIsLoading(false);
 			});
@@ -71,13 +65,23 @@ export function AudioNoteDetail({
 		};
 	}, [playAudio, audioNote]);
 
+	useEffect(() => {
+		if (audioNote && audioSummary) {
+			const newAudioNote = {
+				...audioNote,
+				summary: audioSummary,
+			};
+			setAudioNote(newAudioNote)
+		}
+	}, [audioSummary]);
+
 	if (isLoading) {
 		return <PageLoading />;
 	}
 
 	return (
-		audioNote && (
-			<div className="flex h-screen bg-gray-100">
+		audioNote && audioSummary && (
+			<div className="flex h-screen bg-gray-100 overflow-hidden">
 				{/* Left Sidebar */}
 				<div className="w-16 bg-white p-4 flex flex-col items-center space-y-6">
 					<Link href="/dashboard/transcribe">
@@ -88,12 +92,12 @@ export function AudioNoteDetail({
 							<FileText className="text-white" />
 						</Link>
 					</div>
-					<Link href="/api/auth/logout">
+					<Link href="/api/logout">
 						<LogOut className="text-gray-400" />
 					</Link>
 				</div>
 
-				<div className="flex-1 p-8">
+				<div className="flex-1 p-8 h-screen overflow-y-auto">
 					<div className="max-w-4xl mx-auto">
 						<Card className="p-6">
 							<div className="flex justify-between items-start mb-4">
@@ -126,7 +130,7 @@ export function AudioNoteDetail({
 								</div>
 							</div>
 
-							<Tabs defaultValue="transcript">
+							<Tabs defaultValue="summary">
 								<TabsList>
 									<TabsTrigger value="summary">Summary</TabsTrigger>
 									<TabsTrigger value="transcript">Transcript</TabsTrigger>
@@ -149,7 +153,7 @@ export function AudioNoteDetail({
 									<ShareProject projectId={audioNote.id} projectName={audioNote.title} />
 								</div>
 								<div className="flex space-x-2">
-									<AudioSummaryDialog audioId={audioNote.id} initialSummary={audioNote.summary} />
+									<AudioSummaryDialog audioId={audioNote.id} audioSummary={audioSummary} setAudioSummary={setAudioSummary} />
 									<DynamicDownloadButton audioId={audioNote.id} />
 								</div>
 							</div>

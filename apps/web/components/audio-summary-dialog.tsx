@@ -17,13 +17,15 @@ import { Save, FileText } from 'lucide-react';
 
 export function AudioSummaryDialog({
 	audioId,
-	initialSummary,
-}: {
+	audioSummary,
+	setAudioSummary
+}: Readonly<{
 	audioId: string;
-	initialSummary: string;
-}) {
+	audioSummary: string;
+	setAudioSummary: (summary: string) => void;
+}>) {
 	const [isOpen, setIsOpen] = useState(false);
-	const [summary, setSummary] = useState(initialSummary);
+	const [summary, setSummary] = useState(audioSummary);
 	const [isEditing, setIsEditing] = useState(false);
 	const [editedSummary, setEditedSummary] = useState(summary);
 
@@ -35,16 +37,38 @@ export function AudioSummaryDialog({
 	const handleSave = () => {
 		setSummary(editedSummary);
 		setIsEditing(false);
-		toast('Your changes have been saved successfully.', {
-			duration: 3000,
-			icon: '👍',
-			position: 'top-right',
-			style: {
-				background: '#4caf50',
-				color: '#fff',
+
+		// eslint-disable-next-line turbo/no-undeclared-env-vars
+		fetch(`${process.env.NEXT_PUBLIC_API_URL}/record/${audioId}`, {
+			method: 'PUT',
+			headers: {
+				'Content-Type': 'application/json',
 			},
-		});
-		setIsOpen(false);
+			body: JSON.stringify({
+				summary: editedSummary,
+			}),
+			credentials: 'include',
+		})
+			.then((response) => response.json())
+			.then(() => {
+				setIsOpen(false);
+				setSummary(editedSummary);
+				setAudioSummary(editedSummary);
+			})
+			.catch((err) => {
+				console.error('Error:', err);
+			})
+			.finally(() => {
+				toast('Your changes have been saved successfully.', {
+					duration: 3000,
+					icon: '👍',
+					position: 'top-right',
+					style: {
+						background: '#4caf50',
+						color: '#fff',
+					},
+				});
+			});
 	};
 
 	const handleCancel = () => {
@@ -60,7 +84,7 @@ export function AudioSummaryDialog({
 					Modify Summary
 				</Button>
 			</DialogTrigger>
-			<DialogContent className="sm:max-w-[425px]">
+			<DialogContent className="sm:max-w-[425px] max-h-[90vh] overflow-y-auto">
 				<DialogHeader>
 					<DialogTitle>Audio Summary</DialogTitle>
 					<DialogDescription>View and edit the summary of your audio recording.</DialogDescription>

@@ -43,7 +43,10 @@ export default function LandingPage() {
 								</p>
 							</div>
 							<div className="w-full max-w-xl space-y-2">
-								<Link href="/dashboard">
+								<Link 
+									// eslint-disable-next-line turbo/no-undeclared-env-vars
+									href={`${process.env.NEXT_PUBLIC_API_URL}` + '/auth/login'}
+								>
 									<Button className="h-10 w-72">Get Started</Button>
 								</Link>
 							</div>

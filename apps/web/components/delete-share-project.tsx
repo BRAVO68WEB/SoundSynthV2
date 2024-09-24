@@ -18,19 +18,43 @@ import {
 	DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { toast } from 'react-hot-toast';
-import { Trash2, Share2, MoreVertical, Link, Mail, Twitter, Facebook } from 'lucide-react';
-
-interface ProjectActionsProps {
-	projectId: string;
-	projectName: string;
-}
+import { Trash2, Share2, Link } from 'lucide-react';
+import { ProjectActionsProps } from '@/types';
+import { useRouter } from 'next/navigation';
 
 export function DeleteProject({ projectId, projectName }: ProjectActionsProps) {
+	const router = useRouter();
 	const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
 
 	const handleDelete = () => {
 		setIsDeleteDialogOpen(false);
-		toast(`${projectName} has been successfully deleted.`);
+
+		// eslint-disable-next-line turbo/no-undeclared-env-vars
+		fetch(`${process.env.NEXT_PUBLIC_API_URL}/record/${projectId}`, {
+			method: 'DELETE',
+			headers: {
+				'Content-Type': 'application/json',
+			},
+			credentials: 'include',
+		})
+			.then((response) => response.json())
+			.then(() => {
+				toast(`${projectName} has been successfully deleted.`, {
+					duration: 3000,
+					icon: '🚮',
+					position: 'top-right',
+					style: {
+						background: '#4caf50',
+						color: '#fff',
+					},
+				});
+			})
+			.catch((err) => {
+				console.error('Error:', err);
+			})
+			.finally(() => {
+				router.push('/dashboard');
+			});
 	};
 
 	return (
@@ -66,7 +90,32 @@ export function DeleteProject({ projectId, projectName }: ProjectActionsProps) {
 
 export function ShareProject({ projectId, projectName }: ProjectActionsProps) {
 	const handleShare = (method: string) => {
-		toast(`Project ${projectId} shared via ${method}`);
+		if(method === 'link') {
+			// eslint-disable-next-line turbo/no-undeclared-env-vars
+			fetch(`${process.env.NEXT_PUBLIC_API_URL}/record/${projectId}`, {
+				method: 'PUT',
+				headers: {
+					'Content-Type': 'application/json',
+				},
+				body: JSON.stringify({
+					is_public: true,
+				}),
+				credentials: 'include',
+			})
+				.then((response) => response.json())
+				.then(() => {
+					toast(`Link copied to clipboard!`, {
+						duration: 3000,
+						icon: '🔗',
+						position: 'top-right',
+						style: {
+							background: '#4caf50',
+							color: '#fff',
+						},
+					});
+					navigator.clipboard.writeText(`${window.location.origin}/dashboard/audio/${projectId}?isPublic=true`);
+				})
+		}
 	};
 
 	return (
@@ -82,18 +131,6 @@ export function ShareProject({ projectId, projectName }: ProjectActionsProps) {
 					<DropdownMenuItem onClick={() => handleShare('link')}>
 						<Link className="w-4 h-4 mr-2" />
 						Copy Link
-					</DropdownMenuItem>
-					<DropdownMenuItem onClick={() => handleShare('email')}>
-						<Mail className="w-4 h-4 mr-2" />
-						Email
-					</DropdownMenuItem>
-					<DropdownMenuItem onClick={() => handleShare('twitter')}>
-						<Twitter className="w-4 h-4 mr-2" />
-						Twitter
-					</DropdownMenuItem>
-					<DropdownMenuItem onClick={() => handleShare('facebook')}>
-						<Facebook className="w-4 h-4 mr-2" />
-						Facebook
 					</DropdownMenuItem>
 				</DropdownMenuContent>
 			</DropdownMenu>

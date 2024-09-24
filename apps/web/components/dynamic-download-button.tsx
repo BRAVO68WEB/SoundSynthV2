@@ -1,3 +1,4 @@
+/* eslint-disable turbo/no-undeclared-env-vars */
 'use client';
 
 import { Button } from '@/components/ui/button';
@@ -7,10 +8,13 @@ import {
 	DropdownMenuItem,
 	DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { Download, ChevronDown, FileText, FileBadge } from 'lucide-react';
+import { Download, ChevronDown, FileText, FileBadge, AudioLines } from 'lucide-react';
+import { useRouter } from 'next/navigation';
 import { toast } from 'react-hot-toast';
 
-export function DynamicDownloadButton({ audioId }: { audioId: string }) {
+export function DynamicDownloadButton({ audioId }: Readonly<{ audioId: string }>) {
+	const route = useRouter();
+
 	const handleDownload = (format: string) => {
 		toast('Downloading as ' + format + ' ...', {
 			duration: 3000,
@@ -21,6 +25,14 @@ export function DynamicDownloadButton({ audioId }: { audioId: string }) {
 				color: '#fff',
 			},
 		});
+
+		if(format === 'PDF') {
+			route.push(`${process.env.NEXT_PUBLIC_API_URL}/record/download/${audioId}/pdf`);
+		} else if (format === 'Markdown') {
+			route.push(`${process.env.NEXT_PUBLIC_API_URL}/record/download/${audioId}/text`);
+		} else if (format === 'Original Audio') {
+			route.push(`${process.env.NEXT_PUBLIC_API_URL}/record/download/${audioId}/audio`);
+		}
 	};
 
 	return (
@@ -38,9 +50,13 @@ export function DynamicDownloadButton({ audioId }: { audioId: string }) {
 						<FileBadge className="mr-2 h-4 w-4" />
 						<span>as PDF</span>
 					</DropdownMenuItem>
-					<DropdownMenuItem onClick={() => handleDownload('Plain Text')}>
+					<DropdownMenuItem onClick={() => handleDownload('Markdown')}>
 						<FileText className="mr-2 h-4 w-4" />
-						<span>as Plain Text</span>
+						<span>as Markdown</span>
+					</DropdownMenuItem>
+					<DropdownMenuItem onClick={() => handleDownload('Plain Text')}>
+						<AudioLines className="mr-2 h-4 w-4" />
+						<span>Original Audio</span>
 					</DropdownMenuItem>
 				</DropdownMenuContent>
 			</DropdownMenu>
